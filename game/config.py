@@ -10,8 +10,8 @@ LEFT_PADDLE_POSITION = (-600, 0)
 PADDLE_MOVE = 30 
 
 # Dimensiones de las paletas
-PADDLE_STRETCH = 6
-PADDLE_WIDTH = 1
+PADDLE_STRETCH = 7
+PADDLE_WIDTH = 2
 
 # Colores de las paletas
 RIGHT_PADDLE_COLOR = "cyan"
@@ -21,7 +21,7 @@ LEFT_PADDLE_COLOR = "magenta"
 BALL_START_POSITION = (0, 0)
 
 # Velocidad de la pelota
-BALL_SPEED = 15
+BALL_SPEED = 20
 
 # color de la pelota
 BALL_COLOR = "white"
@@ -51,5 +51,13 @@ LEFT_BORDER_COLOR = "cyan"
 RIGHT_BORDER_COLOR = "magenta"
 LEFT_RIGHT_BORDER_WIDTH = 40 
 LEFT_RIGHT_BORDER_HEIGHT = 100
+
+# ============================================
+# SCOREBOARD (Marcador)
+# ============================================
+
+SCOREBOARD_COLOR = "white"
+SCOREBOARD_FONT = ("Arial", 60, "bold")
+SCOREBOARD_ALIGN = "center"
 
 
