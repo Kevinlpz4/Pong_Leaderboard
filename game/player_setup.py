@@ -35,7 +35,42 @@ class PlayerSetup:
         # Jugador 2 (Derecha) - asegurar que no repita letra
         right_player = self._setup_single_player("derecho", exclude_letter=left_player.letter)
         
-        return left_player, right_player
+        # Preguntar a cuántos goles jugar
+        max_goals = self._setup_max_goals()
+        
+        return left_player, right_player, max_goals
+    
+    def _setup_max_goals(self):
+        """Configura la cantidad de goles para ganar"""
+        self.turtle.clear()
+        self.turtle.goto(0, 80)
+        self.turtle.color("white")
+        self.turtle.write("¿A cuántos goles se juega?", align="center", font=("Arial", 18, "normal"))
+        
+        # Mostrar sugerencias
+        self.turtle.goto(0, 20)
+        self.turtle.color("gray")
+        self.turtle.write("Opciones: 3, 5, 7, 10 (o escribe la cantidad)", align="center", font=("Arial", 12, "normal"))
+        
+        goals = self._get_text_input("Goles (número):")
+        
+        # Validar que sea número válido
+        while not goals or not goals.strip().isdigit() or int(goals.strip()) < 1:
+            self.turtle.clear()
+            self.turtle.goto(0, 50)
+            self.turtle.color("red")
+            self.turtle.write("Ingresa un número válido mayor a 0", align="center", font=("Arial", 14, "normal"))
+            self.turtle.color("white")
+            self.turtle.goto(0, -20)
+            self.turtle.write("¿A cuántos goles se juega?", align="center", font=("Arial", 18, "normal"))
+            goals = self._get_text_input("Goles (número):")
+        
+        max_goals = int(goals.strip())
+        
+        # Limpiar
+        self.turtle.clear()
+        
+        return max_goals
     
     def _setup_single_player(self, side, exclude_letter=None):
         """Configura un solo jugador"""

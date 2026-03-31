@@ -178,3 +178,8 @@ class BorderManager:
             return "score_right"
         
         return None
+    
+    def hide_all(self):
+        """Oculta todos los bordes"""
+        for border in self.borders:
+            border.hideturtle()

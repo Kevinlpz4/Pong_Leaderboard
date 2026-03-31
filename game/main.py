@@ -16,11 +16,12 @@ FLUJO:
 4. Iniciar loop: controller.update() -> screen.update()
 =================================================================
 """
-from turtle import Screen, Turtle
-from game.game_controller import GameController
+from turtle import Screen, Turtle, textinput
+from game.game_controller import GameController, GameState
 from game.player_setup import PlayerSetup
 from game.config import *
 import time
+
 
 def show_menu(screen):
     """Muestra el menú de inicio simple"""
@@ -77,12 +78,42 @@ def show_menu(screen):
     instructions.hideturtle()
 
 
-# ============================================
-# PUNTO DE ENTRADA
-# ============================================
+def ask_replay(screen):
+    """Pregunta si quieren jugar de nuevo
+    Retorna:
+        'S' - Nueva partida (volver al menú)
+        'N' - Salir
+    """
+    while True:
+        response = textinput("Pong", "¿Jugar de nuevo? (S/N):")
+        
+        if response:
+            response = response.strip().upper()
+            if response in ["S", "N"]:
+                return response
+        # Si pone algo más, seguir preguntando
 
-if __name__ == "__main__":
-    # 1. Crear pantalla
+
+def show_goodbye(screen):
+    """Muestra pantalla de despedida"""
+    title = Turtle()
+    title.penup()
+    title.hideturtle()
+    title.color("white")
+    
+    w = screen.window_width()
+    h = screen.window_height()
+    hh = h / 2
+    
+    title.goto(0, 0)
+    title.write("¡Gracias por jugar!", align="center", font=("Arial", 50, "bold"))
+    
+    screen.update()
+    time.sleep(2)
+
+
+def init_screen():
+    """Inicializa la pantalla una sola vez"""
     screen = Screen()
     screen.title("Pong")
     screen.bgcolor("black")
@@ -92,18 +123,50 @@ if __name__ == "__main__":
     # Maximizar ventana
     screen.getcanvas().winfo_toplevel().attributes('-zoomed', True)
     
-    # 2. Mostrar menú de inicio
-    show_menu(screen)
+    return screen
+
+
+# ============================================
+# PUNTO DE ENTRADA
+# ============================================
+
+if __name__ == "__main__":
+    # Crear screen UNA sola vez al inicio
+    screen = init_screen()
     
-    # 3. Configurar jugadores
-    player_setup = PlayerSetup(screen)
-    left_player, right_player = player_setup.setup_players()
-    
-    # 4. Crear controlador del juego
-    game = GameController(screen, left_player, right_player)
-    
-    # 5. Loop principal
     while True:
-        game.update()
-        game.update_screen()
-        time.sleep(0.01)  # ~100 FPS
+        # Si ya pasaron la primera ronda, solo mostrar menú (no crear screen nuevo)
+        show_menu(screen)
+        
+        # Configurar jugadores (incluye cantidad de goles)
+        player_setup = PlayerSetup(screen)
+        left_player, right_player, max_goals = player_setup.setup_players()
+        
+        # Crear controlador del juego
+        game = GameController(screen, left_player, right_player, max_goals)
+        
+        # Loop principal
+        while not game.game_over:
+            game.update()
+            game.update_screen()
+            time.sleep(0.01)  # ~100 FPS
+        
+        # Mostrar pantalla de game over
+        result_turtle = game.show_game_over()
+        
+        # Preguntar si juegan de nuevo
+        screen.update()
+        time.sleep(0.5)  # Pequeña pausa
+        
+        response = ask_replay(screen)
+        
+        # Limpiar resultado
+        if result_turtle:
+            result_turtle.clear()
+            result_turtle.hideturtle()
+        
+        if response == "N":
+            # Salir
+            show_goodbye(screen)
+            break
+        # Si response == "S", vuelve al inicio del while (mostrar menú)

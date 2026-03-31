@@ -4,6 +4,7 @@ GameController - Controla la lógica principal del juego
 Este archivo contiene toda la lógica del juego, separando la presentación
 de la lógica de negocio (SINGLE RESPONSIBILITY PRINCIPLE).
 """
+import turtle
 from game.paddle import Paddle
 from game.ball import Ball
 from game.borders import BorderManager
@@ -27,13 +28,16 @@ class GameController:
     Maneja toda la lógica: movimiento, colisiones, puntuación, estado.
     """
     
-    def __init__(self, screen, left_player: Player, right_player: Player):
+    def __init__(self, screen, left_player: Player, right_player: Player, max_goals: int = 5):
         self.screen = screen
         self.left_player = left_player
         self.right_player = right_player
+        self.max_goals = max_goals
         
         # Estado del juego
         self.state = GameState.PLAYING
+        self.game_over = False
+        self.winner = None
         
         # Keys activas para movimiento fluido
         self.keys = {
@@ -169,6 +173,7 @@ class GameController:
         Maneja cuando se marca un gol.
         - Actualiza el marcador
         - Reinicia la pelota al centro
+        - Verifica si alguien ganó
         """
         if side == "left":
             self.left_player.score += 1
@@ -177,8 +182,72 @@ class GameController:
             self.right_player.score += 1
             self.scoreboard.increase_right()
         
-        # Reiniciar pelota
-        self.ball.reset_position()
+        # Verificar si alguien ganó
+        if self.left_player.score >= self.max_goals:
+            self.game_over = True
+            self.winner = self.left_player
+            self.state = GameState.GAME_OVER
+        elif self.right_player.score >= self.max_goals:
+            self.game_over = True
+            self.winner = self.right_player
+            self.state = GameState.GAME_OVER
+        else:
+            # Reiniciar pelota solo si el juego no terminó
+            self.ball.reset_position()
+    
+    def show_game_over(self):
+        """Muestra la pantalla de fin de juego"""
+        # Limpiar el campo
+        self.left_paddle.hideturtle()
+        self.right_paddle.hideturtle()
+        self.ball.hideturtle()
+        self.border_manager.hide_all()
+        self.scoreboard.hideturtle()
+        
+        # Verificar que hay un ganador
+        if not self.winner:
+            return None
+        
+        # Mostrar resultado
+        result_turtle = turtle.Turtle()
+        result_turtle.penup()
+        result_turtle.hideturtle()
+        result_turtle.color("white")
+        
+        w = self.screen.window_width()
+        h = self.screen.window_height()
+        hh = h / 2
+        
+        # Ganador
+        result_turtle.goto(0, hh * 0.3)
+        result_turtle.write(
+            f"¡{self.winner.name} ({self.winner.letter})GANÓ!",
+            align="center",
+            font=("Arial", 50, "bold")
+        )
+        
+        # Score final
+        result_turtle.goto(0, hh * 0)
+        result_turtle.write(
+            f"Resultado: {self.left_player.letter}:{self.left_player.score} - {self.right_player.score}:{self.right_player.letter}",
+            align="center",
+            font=("Arial", 24, "normal")
+        )
+        
+        # Preguntar si juegan de nuevo
+        result_turtle.goto(0, -hh * 0.3)
+        result_turtle.color("gray")
+        result_turtle.write("¿Jugar de nuevo? (S/N)", align="center", font=("Arial", 20, "normal"))
+        
+        return result_turtle
+    
+    def cleanup(self):
+        """Limpia los elementos del juego"""
+        self.left_paddle.hideturtle()
+        self.right_paddle.hideturtle()
+        self.ball.hideturtle()
+        self.scoreboard.hideturtle()
+        self.border_manager.hide_all()
     
     def update_screen(self):
         """Actualiza la visualización de la pantalla"""
