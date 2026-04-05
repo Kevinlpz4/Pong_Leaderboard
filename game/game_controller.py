@@ -175,8 +175,10 @@ class GameController:
             self.ball, self.left_paddle, self.right_paddle
         )
         
-        if paddle_hit:
-            self.ball.bounce_x()
+        if paddle_hit == "left":
+            self.ball.bounce_x(self.left_paddle, is_left_paddle=True)
+        elif paddle_hit == "right":
+            self.ball.bounce_x(self.right_paddle, is_left_paddle=False)
     
     def _handle_goal(self, side):
         """
