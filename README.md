@@ -1,6 +1,10 @@
 # 🎮 Pong Leaderboard
 
-Un juego Pong clásico desarrollado en Python con un backend FastAPI y almacenamiento en SQLite. Los puntuaciones de los partidos se guardan en una base de datos y pueden consultarse a través de una REST API.
+[![Tests](https://img.shields.io/badge/tests-36%20passed-brightgreen)](https://github.com/kevinbetancourt/pong-leaderboard)
+[![Coverage](https://img.shields.io/badge/coverage-27%25-yellow)](https://github.com/kevinbetancourt/pong-leaderboard)
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
+
+Un juego Pong clásico desarrollado en Python con un backend FastAPI y almacenamiento en SQLite. Las puntuaciones de los partidos se guardan en una base de datos y pueden consultarse a través de una REST API.
 
 ---
 
@@ -27,6 +31,7 @@ Cuando un jugador gana un partido, su puntuación se calcula según la diferenci
 | Servidor | Uvicorn |
 | Config | pydantic-settings |
 | Rate Limiting | slowapi |
+| Testing | pytest + pytest-cov |
 
 ---
 
@@ -50,6 +55,9 @@ pong-leaderboard/
 │   ├── models.py          # Modelos SQLAlchemy
 │   ├── database.py        # Configuración de BD
 │   └── schemas.py         # Schemas Pydantic
+├── tests/                 # Tests unitarios
+│   ├── test_api.py        # Tests de la API
+│   └── test_game_logic.py # Tests de lógica del juego
 ├── settings.py            # Configuración centralizada
 ├── requirements.txt       # Dependencias Python
 └── scores.db             # Base de datos SQLite
@@ -91,7 +99,6 @@ pip install -r requirements.txt
 ### 5. (Opcional) Crear archivo .env
 
 ```bash
-# Copiar desde .env.example y customizear
 cp .env.example .env
 ```
 
@@ -158,7 +165,7 @@ curl http://localhost:8000/scores
 
 ### POST /seed
 
-Pobla la base de datos con datos de ejemplo (top 10 inicial).
+Pobla la base de datos con datos de ejemplo.
 
 ```bash
 curl -X POST http://localhost:8000/seed
@@ -174,7 +181,7 @@ curl http://localhost:8000/health
 
 ### Documentación interactiva
 
-Accedé a `http://localhost:8000/docs` para probar la API desde Swagger UI.
+Accedé a `http://localhost:8000/docs` para probar la API.
 
 ---
 
@@ -185,6 +192,36 @@ Accedé a `http://localhost:8000/docs` para probar la API desde Swagger UI.
 | `DATABASE_URL` | URL de la base de datos | `sqlite:///./scores.db` |
 | `API_HOST` | Host del servidor | `0.0.0.0` |
 | `API_PORT` | Puerto del servidor | `8000` |
+
+---
+
+## Testing
+
+### Ejecutar tests
+
+```bash
+pytest
+```
+
+### Ejecutar con coverage
+
+```bash
+pytest --cov=api --cov=game --cov-report=term-missing
+```
+
+### Coverage actual
+
+| Módulo | Cobertura |
+|--------|-----------|
+| api/database.py | 100% |
+| api/main.py | 94% |
+| api/models.py | 100% |
+| api/schemas.py | 97% |
+| game/collision.py | 100% |
+| game/config.py | 90% |
+| **TOTAL** | **27%** |
+
+> **Nota**: La cobertura del juego es baja porque los tests unitarios no cubren el código visual de turtle (main.py, paddle.py, etc). Solo se testa la lógica de colisiones y puntuación.
 
 ---
 
@@ -202,8 +239,9 @@ Accedé a `http://localhost:8000/docs` para probar la API desde Swagger UI.
 - ✅ Validación de input con Pydantic
 - ✅ Sanitización de nombres de jugador
 - ✅ Rate limiting (10 req/min)
-- ✅ Manejo centralizado de errores
+- ✅ Manejo centralizado errores
 - ✅ Configuración en variables de entorno
+- ✅ 36 tests unitarios
 
 ---
 
