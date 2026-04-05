@@ -5,6 +5,7 @@ Este archivo contiene toda la lógica del juego, separando la presentación
 de la lógica de negocio (SINGLE RESPONSIBILITY PRINCIPLE).
 """
 import turtle
+import requests
 from game.paddle import Paddle
 from game.ball import Ball
 from game.borders import BorderManager
@@ -12,6 +13,9 @@ from game.collision import CollisionManager
 from game.scoreboard import Scoreboard
 from game.player import Player
 from game.config import *
+
+# URL de la API
+API_BASE_URL = "http://localhost:8000"
 
 
 class GameState:
@@ -38,6 +42,7 @@ class GameController:
         self.state = GameState.PLAYING
         self.game_over = False
         self.winner = None
+        self.loser = None
         
         # Keys activas para movimiento fluido
         self.keys = {
@@ -186,14 +191,54 @@ class GameController:
         if self.left_player.score >= self.max_goals:
             self.game_over = True
             self.winner = self.left_player
+            self.loser = self.right_player
             self.state = GameState.GAME_OVER
         elif self.right_player.score >= self.max_goals:
             self.game_over = True
             self.winner = self.right_player
+            self.loser = self.left_player
             self.state = GameState.GAME_OVER
         else:
             # Reiniciar pelota solo si el juego no terminó
             self.ball.reset_position()
+    
+    def _calculate_score(self):
+        """
+        Calcula el score basado en la diferencia de goles.
+        Formula: Diferencia × 100
+        Solo el ganador envia su score.
+        """
+        if not self.winner or not self.loser:
+            return 0
+        
+        winner_score = self.winner.score
+        loser_score = self.loser.score
+        difference = winner_score - loser_score
+        return difference * 100
+    
+    def _send_score_to_api(self):
+        """
+        Envia el score del ganador a la API.
+        """
+        if not self.winner:
+            return False
+        
+        try:
+            score_value = self._calculate_score()
+            payload = {
+                "player": self.winner.name,
+                "score": score_value
+            }
+            response = requests.post(f"{API_BASE_URL}/score", json=payload)
+            if response.status_code == 200:
+                print(f"✓ Score enviado: {self.winner.name} - {score_value} puntos")
+                return True
+            else:
+                print(f"✗ Error al enviar score: {response.status_code}")
+                return False
+        except requests.exceptions.RequestException as e:
+            print(f"✗ No se pudo conectar a la API: {e}")
+            return False
     
     def show_game_over(self):
         """Muestra la pantalla de fin de juego"""
@@ -207,6 +252,10 @@ class GameController:
         # Verificar que hay un ganador
         if not self.winner:
             return None
+        
+        # Calcular y enviar score a la API
+        score_value = self._calculate_score()
+        self._send_score_to_api()
         
         # Mostrar resultado
         result_turtle = turtle.Turtle()
@@ -226,8 +275,18 @@ class GameController:
             font=("Arial", 50, "bold")
         )
         
+        # Score earned
+        result_turtle.goto(0, hh * 0.1)
+        result_turtle.color("#FFD700")
+        result_turtle.write(
+            f"+{score_value} PUNTOS",
+            align="center",
+            font=("Arial", 30, "bold")
+        )
+        
         # Score final
-        result_turtle.goto(0, hh * 0)
+        result_turtle.goto(0, hh * -0.15)
+        result_turtle.color("white")
         result_turtle.write(
             f"Resultado: {self.left_player.letter}:{self.left_player.score} - {self.right_player.score}:{self.right_player.letter}",
             align="center",
@@ -235,7 +294,7 @@ class GameController:
         )
         
         # Preguntar si juegan de nuevo
-        result_turtle.goto(0, -hh * 0.3)
+        result_turtle.goto(0, -hh * 0.4)
         result_turtle.color("gray")
         result_turtle.write("¿Jugar de nuevo? (S/N)", align="center", font=("Arial", 20, "normal"))
         

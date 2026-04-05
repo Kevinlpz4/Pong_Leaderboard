@@ -15,6 +15,21 @@ app = FastAPI(title="Pong Leaderboard API")
 Base.metadata.create_all(bind=engine)
 
 
+# Seed data para el leaderboard
+SEED_SCORES = [
+    {"player": "KEV", "score": 1200},
+    {"player": "MAX", "score": 900},
+    {"player": "JON", "score": 700},
+    {"player": "LEO", "score": 600},
+    {"player": "ART", "score": 500},
+    {"player": "DIE", "score": 400},
+    {"player": "SAM", "score": 300},
+    {"player": "TOM", "score": 200},
+    {"player": "REX", "score": 100},
+    {"player": "ZEK", "score": 50},
+]
+
+
 @app.post("/score", response_model=ScoreResponse)
 def create_score(score_data: ScoreCreate, db: Session = Depends(get_db)):
     """
@@ -31,6 +46,26 @@ def create_score(score_data: ScoreCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_score)
     return new_score
+
+
+@app.post("/seed")
+def seed_scores(db: Session = Depends(get_db)):
+    """
+    Seed the database with initial top 10 scores.
+    Use this to populate the leaderboard with sample data.
+    """
+    # Verificar si ya hay datos
+    existing = db.query(Score).first()
+    if existing:
+        return {"message": "Database already has scores, skipping seed"}
+    
+    # Insertar seed data
+    for data in SEED_SCORES:
+        score = Score(player=data["player"], score=data["score"])
+        db.add(score)
+    
+    db.commit()
+    return {"message": f"Seeded {len(SEED_SCORES)} scores"}
 
 
 @app.get("/scores", response_model=list[ScoreResponse])
