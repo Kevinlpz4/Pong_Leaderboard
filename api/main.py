@@ -11,12 +11,19 @@ from api.database import engine, Base, get_db
 from api.models import Score
 from api.schemas import ScoreCreate, ScoreResponse
 from seed_data import SEED_SCORES
+from settings import get_settings
+
+# Load settings
+settings = get_settings()
 
 # Rate limiter setup
 limiter = Limiter(key_func=get_remote_address)
 
-# Create FastAPI app
-app = FastAPI(title="Pong Leaderboard API")
+# Create FastAPI app with settings
+app = FastAPI(
+    title=settings.api_title,
+    debug=settings.api_debug
+)
 
 # Add rate limiter to app state
 app.state.limiter = limiter
@@ -126,7 +133,7 @@ def health_check():
 # ============================================
 #
 # 1. Install dependencies:
-#    pip install fastapi sqlalchemy uvicorn pydantic-settings slowapi bleach
+#    pip install fastapi sqlalchemy uvicorn pydantic-settings slowapi
 #
 # 2. Run the server:
 #    uvicorn api.main:app --reload

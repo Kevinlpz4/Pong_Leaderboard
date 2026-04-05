@@ -20,6 +20,7 @@ from turtle import Screen, Turtle, textinput
 from game.game_controller import GameController, GameState
 from game.player_setup import PlayerSetup
 from game.config import *
+from settings import get_settings
 import time
 
 
@@ -114,8 +115,11 @@ def show_goodbye(screen):
 
 def init_screen():
     """Inicializa la pantalla una sola vez"""
+    # Load settings
+    settings = get_settings()
+    
     screen = Screen()
-    screen.title("Pong")
+    screen.title(settings.game_title)
     screen.bgcolor("black")
     screen.setup(width=SCREEN_WIDTH, height=SCREEN_HEIGHT)
     screen.tracer(0)
@@ -131,6 +135,9 @@ def init_screen():
 # ============================================
 
 if __name__ == "__main__":
+    # Load settings
+    settings = get_settings()
+    
     # Crear screen UNA sola vez al inicio
     screen = init_screen()
     
@@ -149,7 +156,7 @@ if __name__ == "__main__":
         while not game.game_over:
             game.update()
             game.update_screen()
-            time.sleep(0.01)  # ~100 FPS
+            time.sleep(1 / settings.game_fps)  # FPS configurable
         
         # Mostrar pantalla de game over
         result_turtle = game.show_game_over()
