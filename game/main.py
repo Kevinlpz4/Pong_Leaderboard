@@ -160,10 +160,13 @@ if __name__ == "__main__":
         
         response = ask_replay(screen)
         
-        # Limpiar resultado
+        # Limpiar resultado y todos los elementos del juego
         if result_turtle:
             result_turtle.clear()
             result_turtle.hideturtle()
+        
+        # Limpiar completamente el juego anterior
+        game.cleanup()
         
         if response == "N":
             # Salir

@@ -302,9 +302,13 @@ class GameController:
     
     def cleanup(self):
         """Limpia los elementos del juego"""
+        self.left_paddle.clear()
         self.left_paddle.hideturtle()
+        self.right_paddle.clear()
         self.right_paddle.hideturtle()
+        self.ball.clear()
         self.ball.hideturtle()
+        self.scoreboard.clear()
         self.scoreboard.hideturtle()
         self.border_manager.hide_all()
     

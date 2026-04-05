@@ -182,4 +182,5 @@ class BorderManager:
     def hide_all(self):
         """Oculta todos los bordes"""
         for border in self.borders:
+            border.clear()
             border.hideturtle()
