@@ -4,8 +4,9 @@ GameController - Controla la lógica principal del juego
 Este archivo contiene toda la lógica del juego, separando la presentación
 de la lógica de negocio (SINGLE RESPONSIBILITY PRINCIPLE).
 """
-import turtle
+import logging
 import requests
+import turtle
 from game.paddle import Paddle
 from game.ball import Ball
 from game.borders import BorderManager
@@ -13,9 +14,13 @@ from game.collision import CollisionManager
 from game.scoreboard import Scoreboard
 from game.player import Player
 from game.config import *
+from settings import get_settings
 
-# URL de la API
-API_BASE_URL = "http://localhost:8000"
+# Logger para el juego
+logger = logging.getLogger(__name__)
+
+# Cargar settings
+settings = get_settings()
 
 
 class GameState:
@@ -205,7 +210,7 @@ class GameController:
     def _calculate_score(self):
         """
         Calcula el score basado en la diferencia de goles.
-        Formula: Diferencia × 100
+        Formula: Diferencia × points_per_goal
         Solo el ganador envia su score.
         """
         if not self.winner or not self.loser:
@@ -214,7 +219,7 @@ class GameController:
         winner_score = self.winner.score
         loser_score = self.loser.score
         difference = winner_score - loser_score
-        return difference * 100
+        return difference * settings.points_per_goal
     
     def _send_score_to_api(self):
         """
@@ -229,15 +234,19 @@ class GameController:
                 "player": self.winner.name,
                 "score": score_value
             }
-            response = requests.post(f"{API_BASE_URL}/score", json=payload)
+            response = requests.post(
+                f"{settings.api_base_url}/score", 
+                json=payload,
+                timeout=settings.api_timeout
+            )
             if response.status_code == 200:
-                print(f"✓ Score enviado: {self.winner.name} - {score_value} puntos")
+                logger.info(f"Score enviado: {self.winner.name} - {score_value} puntos")
                 return True
             else:
-                print(f"✗ Error al enviar score: {response.status_code}")
+                logger.error(f"Error al enviar score: {response.status_code}")
                 return False
         except requests.exceptions.RequestException as e:
-            print(f"✗ No se pudo conectar a la API: {e}")
+            logger.warning(f"No se pudo conectar a la API: {e}")
             return False
     
     def show_game_over(self):
