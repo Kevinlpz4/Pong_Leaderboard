@@ -39,6 +39,8 @@ Cuando un jugador gana un partido, su puntuación se calcula según la diferenci
 
 ```
 pong-leaderboard/
+├── docs/                    # Documentación
+│   └── diagramas.md         # Diagramas UML
 ├── game/                  # Lógica del juego Pong
 │   ├── main.py            # Punto de entrada del juego
 │   ├── game_controller.py # Controlador principal
@@ -62,6 +64,15 @@ pong-leaderboard/
 ├── requirements.txt       # Dependencias Python
 └── scores.db             # Base de datos SQLite
 ```
+
+---
+
+## Diagramas UML
+
+Ver [docs/diagramas.md](docs/diagramas.md) para diagramas completos:
+- Diagrama de flujo del sistema
+- Diagrama de clases
+- Diagrama de secuencia
 
 ---
 
