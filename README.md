@@ -25,6 +25,8 @@ Cuando un jugador gana un partido, su puntuación se calcula según la diferenci
 | Base de datos | SQLite |
 | ORM | SQLAlchemy |
 | Servidor | Uvicorn |
+| Config | pydantic-settings |
+| Rate Limiting | slowapi |
 
 ---
 
@@ -48,6 +50,7 @@ pong-leaderboard/
 │   ├── models.py          # Modelos SQLAlchemy
 │   ├── database.py        # Configuración de BD
 │   └── schemas.py         # Schemas Pydantic
+├── settings.py            # Configuración centralizada
 ├── requirements.txt       # Dependencias Python
 └── scores.db             # Base de datos SQLite
 ```
@@ -85,7 +88,14 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 5. Ejecutar el backend
+### 5. (Opcional) Crear archivo .env
+
+```bash
+# Copiar desde .env.example y customizear
+cp .env.example .env
+```
+
+### 6. Ejecutar el backend
 
 ```bash
 python -m uvicorn api.main:app --reload
@@ -93,7 +103,7 @@ python -m uvicorn api.main:app --reload
 
 La API estará disponible en `http://localhost:8000`
 
-### 6. Ejecutar el juego (en otra terminal)
+### 7. Ejecutar el juego (en otra terminal)
 
 ```bash
 python game/main.py
@@ -126,14 +136,6 @@ Solo el ganador envía su puntuación al leaderboard.
 
 ## Endpoints de la API
 
-### POST /seed
-
-Pobla la base de datos con datos de ejemplo (top 10 inicial).
-
-```bash
-curl -X POST http://localhost:8000/seed
-```
-
 ### POST /score
 
 Guarda una nueva puntuación.
@@ -144,6 +146,8 @@ curl -X POST http://localhost:8000/score \
   -d '{"player": "Kevin", "score": 500}'
 ```
 
+**Rate Limiting**: 10 requests por minuto por IP.
+
 ### GET /scores
 
 Obtiene el top 10 de puntuaciones.
@@ -152,9 +156,35 @@ Obtiene el top 10 de puntuaciones.
 curl http://localhost:8000/scores
 ```
 
+### POST /seed
+
+Pobla la base de datos con datos de ejemplo (top 10 inicial).
+
+```bash
+curl -X POST http://localhost:8000/seed
+```
+
+### GET /health
+
+Health check endpoint.
+
+```bash
+curl http://localhost:8000/health
+```
+
 ### Documentación interactiva
 
 Accedé a `http://localhost:8000/docs` para probar la API desde Swagger UI.
+
+---
+
+## Variables de Entorno
+
+| Variable | Descripción | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | URL de la base de datos | `sqlite:///./scores.db` |
+| `API_HOST` | Host del servidor | `0.0.0.0` |
+| `API_PORT` | Puerto del servidor | `8000` |
 
 ---
 
@@ -169,6 +199,11 @@ Accedé a `http://localhost:8000/docs` para probar la API desde Swagger UI.
 - ✅ Almacenamiento persistente en SQLite
 - ✅ Menú de inicio y reinicio
 - ✅ Limpieza de pantalla al reiniciar partida
+- ✅ Validación de input con Pydantic
+- ✅ Sanitización de nombres de jugador
+- ✅ Rate limiting (10 req/min)
+- ✅ Manejo centralizado de errores
+- ✅ Configuración en variables de entorno
 
 ---
 
@@ -178,7 +213,7 @@ Accedé a `http://localhost:8000/docs` para probar la API desde Swagger UI.
 - 🎨 Interfaz web para el juego
 - 📊 Dashboard en tiempo real del leaderboard
 - 👥 Sistema de usuarios y autenticación
-- 📱 Version móvil
+- 📱 Versión móvil
 - 🔄 Historial de partidas por jugador
 
 ---

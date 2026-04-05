@@ -1,28 +1,74 @@
 """
 FastAPI main application for Pong Leaderboard API
 """
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from api.database import engine, Base, get_db
 from api.models import Score
 from api.schemas import ScoreCreate, ScoreResponse
 from seed_data import SEED_SCORES
 
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
+
 # Create FastAPI app
 app = FastAPI(title="Pong Leaderboard API")
 
-# Create tables on startup
-Base.metadata.create_all(bind=engine)
+# Add rate limiter to app state
+app.state.limiter = limiter
 
 
-@app.post("/score", response_model=ScoreResponse)
-def create_score(score_data: ScoreCreate, db: Session = Depends(get_db)):
+# ============================================
+# Exception Handlers
+# ============================================
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Global handler for unexpected errors.
+    Returns a clean 500 error instead of traceback.
+    """
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"}
+    )
+
+
+# ============================================
+# Middleware for rate limiting
+# ============================================
+
+@app.middleware("http")
+async def add_rate_limit_headers(request: Request, call_next):
+    """Add rate limit headers to response"""
+    response = await call_next(request)
+    
+    # Add rate limit headers if available
+    if hasattr(request.state, "rate_limit"):
+        response.headers["X-RateLimit-Limit"] = str(request.state.rate_limit.limit)
+        response.headers["X-RateLimit-Remaining"] = str(request.state.rate_limit.remaining)
+    
+    return response
+
+
+# ============================================
+# Routes
+# ============================================
+
+@app.post("/score", response_model=ScoreResponse, status_code=201)
+@limiter.limit("10/minute")  # Rate limit: 10 requests per minute
+async def create_score(request: Request, score_data: ScoreCreate, db: Session = Depends(get_db)):
     """
     Create a new score entry.
     
-    - **player**: Name of the player
-    - **score**: Score value
+    - **player**: Name of the player (sanitized)
+    - **score**: Score value (must be non-negative)
+    
+    Rate limited to 10 requests per minute per IP.
     """
     new_score = Score(
         player=score_data.player,
@@ -66,11 +112,21 @@ def get_scores(db: Session = Depends(get_db)):
 
 
 # ============================================
+# Health check
+# ============================================
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint"""
+    return {"status": "ok"}
+
+
+# ============================================
 # How to run
 # ============================================
 #
 # 1. Install dependencies:
-#    pip install fastapi sqlalchemy uvicorn
+#    pip install fastapi sqlalchemy uvicorn pydantic-settings slowapi bleach
 #
 # 2. Run the server:
 #    uvicorn api.main:app --reload
@@ -79,5 +135,11 @@ def get_scores(db: Session = Depends(get_db)):
 #    - POST http://localhost:8000/score
 #      Body: {"player": "Kevin", "score": 10}
 #    - GET http://localhost:8000/scores
+#
+# 4. Environment variables:
+#    Create a .env file with:
+#    - DATABASE_URL=sqlite:///./scores.db
+#    - API_HOST=0.0.0.0
+#    - API_PORT=8000
 #
 # ============================================
