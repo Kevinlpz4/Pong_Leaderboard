@@ -74,6 +74,8 @@ Ver [docs/diagramas.md](docs/diagramas.md) para diagramas completos:
 - Diagrama de clases
 - Diagrama de secuencia
 
+> **Nota**: Para visualizar los diagramas en VS Code, se recomienda la extensión **"Mermaid Markdown"** o usar **"Markdown Preview"** (clic derecho → "Open Preview").
+
 ---
 
 ## Instalación y Ejecución
