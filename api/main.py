@@ -88,6 +88,7 @@ async def create_score(request: Request, score_data: ScoreCreate, db: Session = 
 
 
 @app.post("/seed")
+@app.get("/seed")
 def seed_scores(db: Session = Depends(get_db)):
     """
     Seed the database with initial top 10 scores.
